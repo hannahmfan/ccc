@@ -5,7 +5,7 @@ A basic fully connected network, with and without batch normalization, implement
 The MNIST dataset is split into 50000 train, 10000 validation and 10000 test samples. All splits are normalized using the statistics of the training split (using the global mean and standard deviation, not per pixel).
 
 Two networks are trained:
-(1) The first network is like the second, but has a batch normalization layer immediately before each ReLU activation (Ioffe, Szegedy; arxiv.org/abs/1502.03167). Although according to Ioffe and Szegedy it does not reduce covariate shift, also adding batch normalization layers immediately after the two ReLU activations improved test accuracy, so the network is currently implemented as such.
+(1) The same as (2) but with batch normalization before each layer. There are batch normalization layers immediately before each ReLU activation, as well as immediately after the each ReLU activation to improve test accuracy, though this does not reduce covariate shift (Ioffe, Szegedy; arxiv.org/abs/1502.03167). Removing the batch normalization layers from before the ReLUs can actually further improve test accuracy.
 (2) The second network has 2 fully connected layers with ReLU activations. The first hidden layer has 256 units and the second 128 units. The network is initialized with Xavier-He initialization.
 
 The networks are trained for 50 epochs with vanilla minibatch SGD and learning rate 1e-3. The final accuracies on the test set are about 0.94.
@@ -27,7 +27,7 @@ Numerical gradient checking for the backward pass of the batch normalization lay
 - dX: Three similar networks were run, each with one batch normalization layer, one epoch, and one batch of 128. In the backward pass of batch normalization, dX was calculated to be (len(dY) * dY - dbeta - x_hat * np.sum(dY * x_hat,  axis=0)) / len(dY). So the first network computed and recorded this supposed dX. The second network subtracted epsilon from   an input at a certain index for the batch normaization layer, generating a slightly different loss, and the third network instead added epsilon     to this input, generating a slighly different loss. The difference of these last two losses was taken and divided by       2 and epsilon, giving the numerical gradient dX, which ended up within 10^-8 of dX (at the index of epsilon addition and subtraction in the last two networks) from the first network.
 
 ### layersTest.py
-Modified version of layers.py for testing. The BatchNorm layer now takes parameters to allow epsilon to be added/subtracted to a certain index of input during the forward pass. This allows the loss to change from the subtraction iteration to the addition iteration by 2 * epsilon * (dX estimated by the backward pass).
+Modified version of layers.py for testing. The BatchNorm layer here takes parameters to allow epsilon to be added/subtracted to a certain index of input during the forward pass. This allows the loss to change from the subtraction iteration to the addition iteration by 2 * epsilon * (dX estimated by the backward pass).
 
 ### networkTest.py
-Modified version of network.py for testing. In addition to the training loss, the train method now outputs dx computed in the backward pass through the batch normalization layer of the network.
+Modified version of network.py for testing. In addition to the training loss, the train method here outputs dx computed in the backward pass through the batch normalization layer of the network.
