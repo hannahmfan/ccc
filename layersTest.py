@@ -82,22 +82,29 @@ class ReLU(Layer):
         return dY * (self.cache_in >= 0), []
 
 class BatchNorm(Layer):
-    def __init__(self, dim):
+    def __init__(self, dim, epsilon, i1, i2):
         '''
         Represent a BN transformation y = x_hat + beta
             x is an numpy.ndarray with shape (batch_size, dim)
             beta is a bias with dimensions (1, output_dim)
             y is an numpy.ndarray with shape (batch_size, dim)
 
-        beta is initialized to zero
+        beta is initialized to 0
+        epsilon, i1, i2: for potential addition or subtraction by epsilon to
+        an x[i1][i2] input in the training forward pass.
         '''
         self.beta = np.zeros((1, dim))
         self.cache_in = None
+        self.epsilon = epsilon
+        self.i1 = i1
+        self.i2 = i2
 
     def forward(self, x, train=True):
+        mu = np.mean(x, axis=0, keepdims=True)
         if train:
             self.cache_in = x
-        mu = np.mean(x, axis=0, keepdims=True)
+            x[self.i1][self.i2] += self.epsilon
+            print("Added epsilon = {} to x[{}][{}] -> {}".format(self.epsilon, self.i1, self.i2, x[self.i1][self.i2]))
         return x - mu + self.beta
 
     def backward(self, dY):
@@ -124,9 +131,11 @@ class SoftmaxCrossEntropyLoss(Loss):
     def get_loss(self, scores, labels):
         '''
         Calculates the average categorical softmax cross entropy loss.
+
         Args:
             scores (numpy.ndarray): Unnormalized logit class scores. Shape (batch_size, num_classes)
             labels (numpy.ndarray): True labels represented as ints (eg. 2 represents the third class). Shape (batch_size)
+
         Returns:
             loss, grad
             loss (float): The average cross entropy between labels and the softmax normalization of scores

@@ -1,6 +1,6 @@
 import numpy as np
 
-from layers import Linear, ReLU, SoftmaxCrossEntropyLoss
+from layers import Linear, ReLU, BatchNorm, SoftmaxCrossEntropyLoss
 from network import Network
 
 
@@ -8,15 +8,37 @@ def main():
     '''
     Trains two networks on the MNIST dataset.
     Both have two hidden ReLU layers with 256 and 128 units
-    The fist one has a mean batch normalization layer before every layer
+    The first one has a mean batch normalization layer before every layer
     '''
+
     np.random.seed(42)
     n_classes = 10
     dim = 784
 
     inputs, labels = load_normalized_mnist_data()
 
+    # Define network with batch norm
+    netBN = Network(learning_rate = 1e-3)
+    netBN.add_layer(Linear(dim, 256))
+    netBN.add_layer(BatchNorm(256))
+    netBN.add_layer(ReLU())
+    netBN.add_layer(BatchNorm(256))
+    netBN.add_layer(Linear(256, 128))
+    netBN.add_layer(BatchNorm(128))
+    netBN.add_layer(ReLU())
+    netBN.add_layer(BatchNorm(128))
+    netBN.add_layer(Linear(128, n_classes))
+    netBN.set_loss(SoftmaxCrossEntropyLoss())
+
+    train_network(netBN, inputs, labels, 50)
+    test_loss_BN, test_acc_BN = validate_network(netBN, inputs['test'], labels['test'],
+                                           batch_size=128)
+    print('MLP Network with batch normalization:')
+    print('Test loss:', test_loss_BN)
+    print('Test accuracy:', test_acc_BN)
+
     # Define network without batch norm
+    np.random.seed(42)
     net = Network(learning_rate = 1e-3)
     net.add_layer(Linear(dim, 256))
     net.add_layer(ReLU())
@@ -73,13 +95,11 @@ def load_normalized_mnist_data():
 def validate_network(network, inputs, labels, batch_size):
     '''
     Calculates loss and accuracy for network when predicting labels from inputs
-
     Args:
         network (Network): A neural network
         inputs (numpy.ndarray): Inputs to the network
         labels (numpy.ndarray): Labels corresponding to inputs
         batch_size (int): Minibatch size
-
     Returns:
         avg_loss, accuracy
         avg_loss (float): The average loss per sample using the loss function
@@ -113,7 +133,6 @@ def validate_network(network, inputs, labels, batch_size):
 def train_network(network, inputs, labels, n_epochs, batch_size=128):
     '''
     Trains a network for n_epochs
-
     Args:
         network (Network): The neural network to be trained
         inputs (dict): Dictionary with keys 'train' and 'val' mapping to numpy

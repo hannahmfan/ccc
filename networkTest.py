@@ -7,6 +7,7 @@ class Network(object):
     def __init__(self, learning_rate):
         '''
         Returns a new empty neural network with no layers or loss
+
         Args:
             learning_rate (float): Learning rate to be used for minibatch SGD
         '''
@@ -19,6 +20,7 @@ class Network(object):
         Adds a layer to the network in a sequential manner.
         The input to this layer will be the output of the last added layer
         or the initial inputs to the networks if this is the first layer added.
+
         Args:
             layer (Layer): An instantiation of a class that extends Layer
         '''
@@ -27,6 +29,7 @@ class Network(object):
     def set_loss(self, loss):
         '''
         Sets the loss that the network uses for training
+
         Args:
             loss (Loss): An instantiation of a class that extends Loss
         '''
@@ -35,8 +38,10 @@ class Network(object):
     def predict(self, inputs, train=False):
         '''
         Calculates the output of the network for the given inputs.
+
         Args:
             inputs (numpy.ndarray): Inputs to the network
+
         Returns:
             (numpy.ndarray): Outputs of the last layer of the network.
         '''
@@ -49,21 +54,27 @@ class Network(object):
         '''
         Calculates the loss of the network for the given inputs and labels
         Performs a gradient descent step to minimize the loss
+
         Args:
             inputs (numpy.ndarray): Inputs to the network
             labels (numpy.ndarray): Int representation of the labels (eg. the third class is represented by 2)
+
         Returns:
             (float): The loss before updating the network
+            (float): dx from backward pass of the BatchNorm layer
         '''
         vars_and_grads = []
+        dx = 0
 
         # Forward pass
         scores = self.predict(inputs, train=True)
 
         # Backward pass
         loss, grad = self.loss.get_loss(scores, labels)
-        for layer in reversed(self.layers):
+        for i, layer in enumerate(reversed(self.layers)):
             grad, layer_var_grad = layer.backward(grad)
+            if i == 1: # BatchNorm layer
+                dx = grad
             vars_and_grads += layer_var_grad
 
         # Gradient descent update:
@@ -71,4 +82,4 @@ class Network(object):
             var, grad = var_grad
             var -= self.lr * grad
 
-        return loss
+        return loss, dx
