@@ -5,7 +5,7 @@ A basic fully connected network, with and without batch normalization, implement
 The MNIST dataset is split into 50000 train, 10000 validation and 10000 test samples. All splits are normalized using the statistics of the training split (using the global mean and standard deviation, not per pixel).
 
 Two networks are trained:
-(1) The first network is like the second, but has a batch normalization layer immediately before each ReLU activation (Ioffe, Szegedy, arxiv.org/abs/1502.03167). Though it does not reduce covariate shift according to Ioffe and Szegedy, also adding batch normalization layers immediately after the two ReLU activations improved test accuracy, so that is how it is currently implemented.
+(1) The first network is like the second, but has a batch normalization layer immediately before each ReLU activation (Ioffe, Szegedy; arxiv.org/abs/1502.03167). Although according to Ioffe and Szegedy it does not reduce covariate shift, also adding batch normalization layers immediately after the two ReLU activations improved test accuracy, so the network is currently implemented as such.
 (2) The second network has 2 fully connected layers with ReLU activations. The first hidden layer has 256 units and the second 128 units. The network is initialized with Xavier-He initialization.
 
 The networks are trained for 50 epochs with vanilla minibatch SGD and learning rate 1e-3. The final accuracies on the test set are about 0.94.
